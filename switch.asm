@@ -3,6 +3,14 @@
 ;****                 Студент НИУ МАИ ****
 ;****                        2020 год ****
 ;*****************************************
+;Задание	Реализовать оператор
+;		Если_это_Символ_то_Перейти_в \
+;			?:=al \
+;	      ( ':'  => instruction_separator )\ ......
+;*********************************************************
+
+;S!WITCL al,FEND,”:”, instruction_separator,………
+;********************************************************
 
 FORMAT PE console
 entry start
@@ -52,8 +60,50 @@ MACRO switc!h src_char, end_label, [char, label]
         ; случай без совпадении вообще
         pop eax
         jmp end_label
-@@:
+    @@:
     end if
+}
+
+MACRO JUMP char_arg, [input_params]
+{
+    common
+    match =?:==src_char, char_arg
+    \{
+        chars_and_labels equ 
+        start_CAL = 1
+        
+        end_label equ 
+        end_label_flag equ 0
+        
+        
+        display "saucksess", 13,10
+        forward
+        match =(char==>label=), input_params
+        \\{
+            chars_and_labels equ chars_and_labels, \char,  \label
+        \\}
+        match ==>label, input_params
+        \\{
+            if end_label_flag eq 0
+                end_label_flag equ 1
+                end_label equ  label
+            else
+                display "wrong amount of ending(default) labels",13,10
+            end if
+        \\}
+        common
+        ; проверка аргументов на пустоту
+        if end_label eq
+            display "endind(default) label is not exist or wrong formated",13,10
+        else if chars_and_labels eq
+            display "comparing chars or labels are not exist or wrong formated",13,10
+        else
+            ;display \src_char, end_label chars_and_labels
+        end if
+    \}
+    common
+        switc!h \src_char, end_label chars_and_labels
+
 }
 
 
@@ -71,8 +121,9 @@ format_int db '%d',0
 
 section '.code' code readable executable
 start:
-    mov dh, 'b'
-    switc!h dh, endlabel, 'a', hello,'b', 
+    mov dh, ':'
+    JUMP ?:=dh, ( ':'  => hello ), ('a' => no_you), =>endlabel
+    ;switc!h dh, endlabel, 'a', hello,'b', 
 
 ; тестовый флаг при ошибке
     mov edx, wrong_wrd
