@@ -100,8 +100,9 @@ MACRO switc!h src_char, end_label, [char, label]
             mov ah, 1
             pop eax
             jmp label
-@@:
         \}
+    @@:
+
     common
         cmp ah, 1
         je @f

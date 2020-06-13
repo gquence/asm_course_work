@@ -72,7 +72,7 @@ format_int db '%d',0
 section '.code' code readable executable
 start:
     mov dh, 'b'
-    switc!h dh, endlabel, 'a', hello,'b', no_you
+    switc!h dh, endlabel, 'a', hello,'b', 
 
 ; тестовый флаг при ошибке
     mov edx, wrong_wrd
