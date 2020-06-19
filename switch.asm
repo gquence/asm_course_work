@@ -1,7 +1,7 @@
 ;*****************************************
 ;**** Автор: Аншуков Михаил Андреевич ****
 ;****                 Студент НИУ МАИ ****
-;****                        2020 год ****
+;****                  20.06.2020 год ****
 ;*****************************************
 ;Задание	Реализовать оператор
 ;		Если_это_Символ_то_Перейти_в \
@@ -11,6 +11,7 @@
 
 ;S!WITCL al,FEND,”:”, instruction_separator,………
 ;********************************************************
+
 
 FORMAT PE console
 entry start
@@ -54,8 +55,8 @@ MACRO switc!h src_char, end_label, [char, label]
     @@:
 
     common
-        cmp ah, 1
-        je @f
+        xor ah, 1
+        jz @f
         ; случай без совпадении вообще
         pop eax
         match ,end_label
@@ -68,81 +69,40 @@ MACRO switc!h src_char, end_label, [char, label]
     end if
 }
 
-MACRO JUMP all_args
+MACRO Если_это_Символ_то_Перейти_в  all_args
 {
+    args_string equ
+
+    ;получение первого аргумента (исходное сравниваемое значение)
     common
-    match =?:==src_char =(other_args, all_args
+    match =?:==char =(others, all_args
     \{
-        ; char_args      - исходная строка аргументов
-        ; args_strings   - результирующая(необходимая) строка для макроса switc!h
-        ; last_elem_flag - флаг для бесконечного цикла
-        ;
-        ; match1_flag \           флаги проверки match 
-        ; match2_flag -->  для исключения входа в макрос switc!h 
-        ; match3_flag /       с неверными значениями аргументов
-
-        char_args equ (\other_args
-        args_string equ \src_char
-        last_elem_flag equ 0
-        \match1_flag equ 1
-        \match2_flag equ 1
-        \match3_flag equ 1
-
-        while \\match3_flag eq 1
-            ; добавление end_label как второго параметра макроса switc!h
-            match something=)==>label, char_args
-            \\{
-                args_string equ  args_string, \label
-                char_args equ \something)
-                \\match1_flag equ 0
-            \\}
-            ; два костыля для проверки исключительных ситуаций,\
-            ; чтобы избежать бесконечного цикла
-            match something=)=>label, char_args
-            \\{
-                \\match1_flag equ 1
-                break
-            \\}
-            match something=)==label, char_args
-            \\{
-                \\match1_flag equ 1
-                break
-            \\}
+        args_string equ \char
+        ; получение end_label
+        match something=)==>label, all_args
+        \\{
+            args_string equ args_string, \label
+        \\}
+        ;получение аргументов вида char => label
+        tmp_args equ
+        irps arg, (\others
+        \\{
+            ; аккумуляция строки по-символьно
+            tmp_args equ tmp_args \\arg
 
             ; добавление char и label как 3-го и старше параметров макроса switc!h
-            common match =(char==>label=) other_char_args, char_args
-            \\{
+            match =(char==>label=), tmp_args
+            \\\{
                 args_string equ args_string, \char,  \label
-                char_args equ \other_char_args
-                \\match2_flag equ 0
-            \\}
-            ; добавление char и label как ПОСЛЕДНИХ параметров макроса switc!h\
-            ; и выход из цикла
-            common match =(char==>label=), char_args
-            \\{
-                args_string equ args_string, \char,  \label
-                \\match3_flag equ 0
-                break
-            \\}
-            ; проверка, которая не работает :( (непонятно почему)
-            if (\match1_flag eq 1) & (\match2_flag eq 1) & (\match3_flag eq 1)
-                display "Invalid arguments",13,10
-            end if
-            \match2_flag equ 1
-        end while 
-        ; проверка, на валидность аргументов\
-        ; (должен быть минимум одна пара 'char' 'label' и 'end_label')
-        if (\match1_flag eq 1) | (\match3_flag eq 1)
-            display "Invalid arguments",13,10
-        else
-            common
-            match params, args_string
-            \\{
-                switc!h  \params
-            \\}
-        end if 
-        \}
+                tmp_args equ 
+            \\\}
+        \\}
+    \}
 
+    match params, args_string
+    \{
+        switc!h \params
+    \}
 }
 
 
@@ -162,7 +122,7 @@ section '.code' code readable executable
 start:
     mov dh, 's'
     ; 
-    JUMP ?:=dh (':' => hello) ('a' => no_you) => endlabel
+    Если_это_Символ_то_Перейти_в ?:=dh ('a'=>hello) ('b'=>no_you) ('g'=>l1)  => endlabel
     ;switc!h dh, endlabel, 'a', hello,'b', 
 
 ; тестовый флаг при ошибке
@@ -172,6 +132,9 @@ start:
 
 
 ;тестовые флаги
+l1:
+    cinvoke printf, format_int, 1
+    invoke exitprocess,0
 no_you:
     mov edx, no_you_wrd
     cinvoke printf, format_cstring, edx
